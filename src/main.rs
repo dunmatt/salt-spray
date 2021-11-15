@@ -41,6 +41,7 @@ fn format_file<S: AsRef<OsStr> + ?Sized>(filename: &S) -> std::io::Result<Output
         let mut cmd = Command::new("cargo");
         cmd.args(["fmt", "--", "--color", "never", relative_path.to_str().unwrap()]);
         cmd.current_dir(workspace);
+        println!("{:?}", cmd);
         cmd.output()
     } else {
         Err(std::io::Error::new(ErrorKind::NotFound,
@@ -54,6 +55,7 @@ fn main() {
     drop(args.next());
 
     for arg in args {
+        println!("{:?}", arg);
         match format_file(&arg) {
             Ok(Output{status, ..}) if status.code() == Some(0) => {}
             Ok(Output{stderr, ..}) => eprintln!("{}", String::from_utf8_lossy(&stderr)),
