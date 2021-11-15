@@ -1,0 +1,5 @@
+- id: rust-fmt
+  name: Rustfmt
+  entry: salt-spray
+  language: rust
+  types: [rust]
