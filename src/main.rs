@@ -15,16 +15,20 @@ use std::process::{Command, Output};
 /// Split a given file path into the path of the file's workspace and the relative
 /// path from the workspace to the file.
 fn split_at_workspace<S: AsRef<OsStr> + ?Sized>(filename: &S) -> Option<(PathBuf, PathBuf)> {
-    let mut outermost_cargo_toml = None;
+    let outermost_cargo_toml = None;
     let filename = Path::new(filename);
 
     for parent in filename.ancestors() {
-        if parent.join("Cargo.lock").exists() || parent.join("target").exists() {
+        // if parent.join("Cargo.lock").exists() || parent.join("target").exists() {
+        //     let relative_path = filename.strip_prefix(parent).unwrap();
+        //     return Some((parent.to_path_buf(), relative_path.to_path_buf()))
+        // }
+        // if parent.join("Cargo.toml").exists() {
+        //     outermost_cargo_toml = Some(parent.to_path_buf())
+        // }
+        if parent.join("Cargo.toml").exists() {
             let relative_path = filename.strip_prefix(parent).unwrap();
             return Some((parent.to_path_buf(), relative_path.to_path_buf()))
-        }
-        if parent.join("Cargo.toml").exists() {
-            outermost_cargo_toml = Some(parent.to_path_buf())
         }
     }
     // only trick is that the lock file and target dir may not exist, so in that
