@@ -175,32 +175,33 @@ impl SupressedLints {
         let mut result = Relationship::Expected;
 
         // Is everything in self also in other?
-        for (key, val) in self.lints.iter() {
-            if let Some(oval) = other.lints.get(key) {
-                for (lint, count) in val {
-                    if let Some(ocount) = oval.get(lint) {
+        for (file, lints) in self.lints.iter() {
+            if let Some(olints) = other.lints.get(file) {
+                for (lint, count) in lints {
+                    if let Some(ocount) = olints.get(lint) {
                         if *count < *ocount {
                             result = Relationship::ProperSubset;
                         } else if *count > *ocount {
-                            eprintln!("Cannot allow({}) count to increase in {}", lint, key);
+                            eprintln!("Cannot allow({}) count to increase in {}", lint, file);
                             return Relationship::NotASubset;
                         }
                     } else {
-                        eprintln!("Cannot add allow({}) to {}", lint, key);
+                        eprintln!("Cannot add allow({}) to {}", lint, file);
                         return Relationship::NotASubset;
                     }
                 }
-            } else if val.len() > 0 {
-                eprintln!("Cannot surpress new lints in {}", key);
+            } else if lints.len() > 0 {
+                eprintln!("Cannot surpress new lints in {}", file);
                 return Relationship::NotASubset;
             }
         }
 
         // Is there anything in other that is not in self?
-        for (okey, oval) in other.lints.iter() {
-            if let Some(val) = self.lints.get(okey) {
-                for (lint, _count) in oval {
-                    if !val.contains_key(lint) {
+        for (ofile, olints) in other.lints.iter() {
+            if let Some(lints) = self.lints.get(ofile) {
+                for (lint, _count) in olints {
+                    if !lints.contains_key(lint) {
+                        println!("No longer have {} to worry about.", lint);
                         result = Relationship::ProperSubset;
                     }
                 }
