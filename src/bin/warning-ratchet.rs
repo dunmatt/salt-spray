@@ -199,9 +199,9 @@ impl SupressedLints {
         // Is there anything in other that is not in self?
         for (ofile, olints) in other.lints.iter() {
             if let Some(lints) = self.lints.get(ofile) {
-                for (lint, _count) in olints {
-                    if !lints.contains_key(lint) {
-                        println!("No longer have {} to worry about.", lint);
+                for (lint, count) in olints {
+                    if !lints.contains_key(lint) && *count > 0 {
+                        // println!("No longer have {} to worry about.", lint);
                         result = Relationship::ProperSubset;
                     }
                 }
