@@ -75,6 +75,7 @@ fn find_supressed_lints<S: AsRef<OsStr>>(filenames: Vec<S>) -> SupressedLints {
     result
 }
 
+// #[allow(unsafe_code)]
 fn count_lints_in_attrs(
     result: &mut BTreeMap<String, usize>,
     attrs: &Vec<Attribute>,
@@ -89,11 +90,13 @@ fn count_lints_in_attrs(
                 for lint in lints.nested {
                     // hooray metaprogramming  :-/
                     if let syn::NestedMeta::Meta(syn::Meta::Path(lint)) = lint {
-                        let lint = lint.get_ident().unwrap().to_string();
-                        if result.contains_key(&lint) {
-                            *result.get_mut(&lint).unwrap() += item_count;
-                        } else {
-                            result.insert(lint, item_count);
+                        if let Some(lint) = lint.get_ident() {
+                            let lint = lint.to_string();
+                            if result.contains_key(&lint) {
+                                *result.get_mut(&lint).unwrap() += item_count;
+                            } else {
+                                result.insert(lint, item_count);
+                            }
                         }
                     }
                 }
