@@ -9,7 +9,7 @@
 //! .therug.yaml to have fewer warnings swept under it.
 //!
 
-#![allow(unused_must_use, unused_imports)] // Leave these in; this file is its own test data.
+// #![allow(unused_must_use, unused_imports)] // Leave these in; this file is its own test data.
 #![allow(unused_variables)]
 
 use std::cmp::{max, min};
@@ -174,6 +174,7 @@ impl SupressedLints {
     fn vis_a_vis(&self, other: &SupressedLints) -> Relationship {
         let mut result = Relationship::Expected;
 
+        // Is everything in self also in other?
         for (key, val) in self.lints.iter() {
             if let Some(oval) = other.lints.get(key) {
                 for (lint, count) in val {
@@ -194,17 +195,35 @@ impl SupressedLints {
                 return Relationship::NotASubset;
             }
         }
+
+        // Is there anything in other that is not in self?
+        for (okey, oval) in other.lints.iter() {
+            if let Some(val) = self.lints.get(okey) {
+                for (lint, _count) in oval {
+                    if !val.contains_key(lint) {
+                        result = Relationship::ProperSubset;
+                    }
+                }
+            } else {
+                result = Relationship::ProperSubset;
+            }
+        }
         result
     }
 
     fn shrink_around(&mut self, other: &SupressedLints) {
+        // TODO: remove keys that are now missing?
         for (key, val) in self.lints.iter_mut() {
             if let Some(oval) = other.lints.get(key) {
                 for (lint, count) in val.iter_mut() {
                     if let Some(ocount) = oval.get(lint) {
                         *count = min(*count, *ocount);
+                    } else {
+                        *count = 0;
                     }
                 }
+            } else {
+                val.clear();
             }
         }
     }
