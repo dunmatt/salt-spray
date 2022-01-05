@@ -204,9 +204,10 @@ impl SupressedLints {
                         result = Relationship::ProperSubset;
                     }
                 }
-            } else {
-                result = Relationship::ProperSubset;
             }
+            // No else here because pre-commit chunks the filenames before
+            // invoking us, so on the second invocation we expect to have
+            // lints that other does not.
         }
         result
     }
