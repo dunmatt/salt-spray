@@ -157,6 +157,7 @@ fn main() {
             expected_supressed_lints.shrink_around(&observed_supressed_lints);
             sweep_under_therug(&expected_supressed_lints);
             println!("Thanks for enabling more lints!  Please run `git add {}` and retry your commit.", SHAMEFILE);
+            std::process::exit(2);
         }
         Relationship::NotASubset => {
             // For the most part NotASubset is handled by the eprintln calls below
@@ -164,6 +165,7 @@ fn main() {
                 expected_supressed_lints.grow_around(&observed_supressed_lints);
                 sweep_under_therug(&expected_supressed_lints);
             }
+            std::process::exit(1);
         }
     }
 }
