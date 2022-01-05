@@ -3,3 +3,8 @@
   entry: salt-spray
   language: rust
   types: [rust]
+- id: warning-ratchet
+  name: Warning Ratchet
+  entry: warning-ratchet
+  language: rust
+  types: [rust]
