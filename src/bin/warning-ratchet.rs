@@ -53,7 +53,7 @@ fn read_file<S: AsRef<OsStr>>(filename: S) -> Option<String> {
 fn look_under_therug() -> SupressedLints {
     // TODO (mrd): this should probably only be a default, test an env var first
     match read_file(SHAMEFILE) {
-        Some(contents) => serde_yaml::from_str(&contents).unwrap(),
+        Some(contents) => serde_yaml::from_str(&contents).expect(&contents),
         None => Default::default(),
     }
 }
@@ -66,6 +66,7 @@ fn sweep_under_therug(lints: &SupressedLints) {
 }
 
 fn find_supressed_lints<S: AsRef<OsStr>>(filenames: Vec<S>) -> SupressedLints {
+    println!("{:?}", filenames.len());
     let mut result = SupressedLints::default();
     for name in filenames {
         if Path::new(&name).extension().map(|e| e == "rs").unwrap_or(false) {
