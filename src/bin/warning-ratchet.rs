@@ -66,7 +66,6 @@ fn sweep_under_therug(lints: &SupressedLints) {
 }
 
 fn find_supressed_lints<S: AsRef<OsStr>>(filenames: Vec<S>) -> SupressedLints {
-    println!("{:?}", filenames.len());
     let mut result = SupressedLints::default();
     for name in filenames {
         if Path::new(&name).extension().map(|e| e == "rs").unwrap_or(false) {
