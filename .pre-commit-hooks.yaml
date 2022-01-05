@@ -8,3 +8,4 @@
   entry: warning-ratchet
   language: rust
   types: [rust]
+  require_serial: true
