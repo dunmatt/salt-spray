@@ -65,7 +65,7 @@ fn sweep_under_therug(lints: &SupressedLints) {
     file.write_all(contents.as_bytes()).unwrap();
 }
 
-fn find_supressed_lints<S: AsRef<OsStr>>(filenames: Vec<S>) -> SupressedLints {
+fn find_supressed_lints<S: AsRef<OsStr>>(filenames: &Vec<S>) -> SupressedLints {
     let mut result = SupressedLints::default();
     for name in filenames {
         if Path::new(&name).extension().map(|e| e == "rs").unwrap_or(false) {
@@ -147,13 +147,14 @@ fn count_suppressed_lints(ast: syn::File) -> BTreeMap<String, usize> {
 fn main() {
     let mut args = env::args();
     drop(args.next());
-    let observed_supressed_lints = find_supressed_lints(args.collect());
+    let relevant_files: Vec<String> = args.collect();
+    let observed_supressed_lints = find_supressed_lints(&relevant_files);
     let mut expected_supressed_lints = look_under_therug();
 
     match observed_supressed_lints.vis_a_vis(&expected_supressed_lints) {
         Relationship::Expected => (),
         Relationship::ProperSubset => {
-            expected_supressed_lints.shrink_around(&observed_supressed_lints);
+            expected_supressed_lints.shrink_around(&observed_supressed_lints, &relevant_files);
             sweep_under_therug(&expected_supressed_lints);
             println!("Thanks for enabling more lints!  Please run `git add {}` and retry your commit.", SHAMEFILE);
             std::process::exit(2);
@@ -213,7 +214,7 @@ impl SupressedLints {
         result
     }
 
-    fn shrink_around(&mut self, other: &SupressedLints) {
+    fn shrink_around(&mut self, other: &SupressedLints, examined_files: &Vec<String>) {
         // TODO: remove keys that are now missing?
         for (key, val) in self.lints.iter_mut() {
             if let Some(oval) = other.lints.get(key) {
@@ -224,7 +225,7 @@ impl SupressedLints {
                         *count = 0;
                     }
                 }
-            } else {
+            } else if examined_files.contains(key) {
                 val.clear();
             }
         }
