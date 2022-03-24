@@ -3,6 +3,11 @@
   entry: salt-spray
   language: rust
   types: [rust]
+- id: clippy
+  name: Clippy
+  entry: salt-clip
+  language: rust
+  types: [rust]
 - id: warning-ratchet
   name: Warning Ratchet
   entry: warning-ratchet

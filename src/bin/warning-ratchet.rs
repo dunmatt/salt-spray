@@ -156,7 +156,10 @@ fn main() {
         Relationship::ProperSubset => {
             expected_supressed_lints.shrink_around(&observed_supressed_lints, &relevant_files);
             sweep_under_therug(&expected_supressed_lints);
-            println!("Thanks for enabling more lints!  Please run `git add {}` and retry your commit.", SHAMEFILE);
+            println!(
+                "Thanks for enabling more lints!  Please run `git add {}` and retry your commit.",
+                SHAMEFILE
+            );
             std::process::exit(2);
         }
         Relationship::NotASubset => {
@@ -202,7 +205,7 @@ impl SupressedLints {
             if let Some(lints) = self.lints.get(ofile) {
                 for (lint, count) in olints {
                     if !lints.contains_key(lint) && *count > 0 {
-                        // println!("No longer have {} to worry about.", lint);
+                        println!("No longer have {} to worry about in {}.", lint, ofile);
                         result = Relationship::ProperSubset;
                     }
                 }
@@ -247,13 +250,10 @@ impl SupressedLints {
         }
     }
 
-    fn load_suppressed_lints_from(&mut self, file: &str) {
-        let contents = read_file(&file);
-        if contents.is_none() {
-            return;
+    fn load_suppressed_lints_from(&mut self, filename: &str) {
+        if let Some(contents) = read_file(filename) {
+            let ast = syn::parse_file(&contents).unwrap();
+            self.lints.insert(filename.to_string(), count_suppressed_lints(ast));
         }
-        let ast = syn::parse_file(&contents.unwrap()).unwrap();
-
-        self.lints.insert(file.to_string(), count_suppressed_lints(ast));
     }
 }

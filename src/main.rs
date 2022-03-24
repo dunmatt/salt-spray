@@ -6,11 +6,14 @@
 //! to rust.
 //!
 
+#![forbid(unsafe_code)]
+
 use std::env;
 use std::ffi::OsStr;
-use std::io::ErrorKind;
-use std::path::{Path, PathBuf};
+use std::io::{self, ErrorKind};
 use std::process::{Command, Output};
+
+use salt_spray::find_manifest;
 
 // /// Split a given file path into the path of the file's workspace and the relative
 // /// path from the workspace to the file.
@@ -39,19 +42,8 @@ use std::process::{Command, Output};
 //     })
 // }
 
-fn find_manifest<S: AsRef<OsStr> + ?Sized>(filename: &S) -> Option<PathBuf> {
-    let filename = Path::new(filename);
-    for parent in filename.ancestors() {
-        let cargo = parent.join("Cargo.toml");
-        if cargo.exists() {
-            return Some(cargo.to_path_buf());
-        }
-    }
-    None
-}
-
 /// Format a single file using `cargo fmt`
-fn format_file<S: AsRef<OsStr> + ?Sized>(filename: &S) -> std::io::Result<Output> {
+fn format_file<S: AsRef<OsStr> + ?Sized>(filename: &S) -> io::Result<Output> {
     if let Some(manifest_path) = find_manifest(filename) {
         let mut cmd = Command::new("cargo");
         cmd.args([
@@ -63,17 +55,10 @@ fn format_file<S: AsRef<OsStr> + ?Sized>(filename: &S) -> std::io::Result<Output
             "never",
             filename.as_ref().to_str().unwrap(),
         ]);
-        // cmd.current_dir(workspace);
         println!("{:?}", cmd);
         cmd.output()
-    // if let Some((workspace, relative_path)) = split_at_workspace(filename) {
-    //     let mut cmd = Command::new("cargo");
-    //     cmd.args(["fmt", "--", "--color", "never", relative_path.to_str().unwrap()]);
-    //     cmd.current_dir(workspace);
-    //     println!("{:?}", cmd);
-    //     cmd.output()
     } else {
-        Err(std::io::Error::new(
+        Err(io::Error::new(
             ErrorKind::NotFound,
             format!("No workspace found for {:?}", filename.as_ref().to_str()),
         ))
