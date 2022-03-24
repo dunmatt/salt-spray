@@ -8,7 +8,7 @@
 use std::collections::{BTreeSet, HashMap};
 use std::env;
 use std::ffi::OsStr; // intentionally unused since this file is its own test data
-use std::process::{Command, Output};
+use std::process::{self, Command, Output};
 
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -21,7 +21,8 @@ static CLIPPY_FILE_IDENTIFICATION: Lazy<Regex> = Lazy::new(|| {
 });
 
 /// Runs Clippy on a crate, but only outputs lints for files in the given set.
-fn lint_crate(cargo_toml: &str, files: &BTreeSet<String>) {
+fn lint_crate(cargo_toml: &str, files: &BTreeSet<String>) -> i32 {
+    let mut result = 0;
     let mut cmd = Command::new("cargo");
     cmd.args(["clippy", "--no-deps", "--quiet", "--manifest-path", cargo_toml]);
 
@@ -34,12 +35,14 @@ fn lint_crate(cargo_toml: &str, files: &BTreeSet<String>) {
                     let project_relative_filename = captures.get(1).unwrap().as_str();
                     if files.iter().any(|s| s.ends_with(project_relative_filename)) {
                         eprintln!("\n{}", found_lint);
+                        result += 1;
                     }
                 }
             }
         }
         e => eprintln!("{:?}", e),
     }
+    result
 }
 
 /// Do the thing
@@ -59,7 +62,9 @@ fn main() {
         }
     }
 
+    let mut violation_count = 0;
     for (cargo_toml, files) in files_by_crate.iter() {
-        lint_crate(cargo_toml, files);
+        violation_count += lint_crate(cargo_toml, files);
     }
+    process::exit(violation_count);
 }
