@@ -22,7 +22,8 @@ static CLIPPY_FILE_IDENTIFICATION: Lazy<Regex> = Lazy::new(|| {
 
 /// Runs Clippy on a crate, but only outputs lints for files in the given set.
 fn lint_crate(cargo_toml: &str, files: &BTreeSet<String>) -> i32 {
-    let mut result = 0;
+    let mut result = 5;
+    // let mut result = 0;
     let mut cmd = Command::new("cargo");
     cmd.args(["clippy", "--no-deps", "--quiet", "--manifest-path", cargo_toml]);
 
@@ -36,7 +37,11 @@ fn lint_crate(cargo_toml: &str, files: &BTreeSet<String>) -> i32 {
                     if files.iter().any(|s| s.ends_with(project_relative_filename)) {
                         eprintln!("\n{}", found_lint);
                         result += 1;
+                    } else {
+                        eprintln!("None of the files ended with {}", project_relative_filename);
                     }
+                } else {
+                    eprintln!("=======\nBad Input\n{}", found_lint);
                 }
             }
         }
