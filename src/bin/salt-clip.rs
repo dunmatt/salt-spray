@@ -99,7 +99,6 @@ fn main() {
     for mut arg in args {
         if arg.starts_with(CLIPPY_ENV_ARGS) {
             clippy_env_args = Some(arg.split_off(CLIPPY_ENV_ARGS.len()));
-            eprintln!("{}", clippy_env_args.as_ref().unwrap());
         } else if let Some(manifest_path) = find_manifest(&arg) {
             let manifest_path = manifest_path.to_string_lossy().to_string();
             let files = files_by_crate.entry(manifest_path).or_default();
