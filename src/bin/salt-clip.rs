@@ -13,19 +13,42 @@ use std::process::{self, Command, Output};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-use salt_spray::find_manifest;
+use salt_spray::{find_manifest, find_repo_root};
 
 static CLIPPY_ENV_ARGS: &str = "--env-args=";
 static CLIPPY_FILE_IDENTIFICATION: Lazy<Regex> = Lazy::new(|| {
     // The filename ends up in capture group #1
     Regex::new(r"-->\s+([^:]+)").unwrap()
 });
+static ENV_VAR_REFERENCE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(\$[A-Z_]+)(?:\W|$)").unwrap()
+});
+
+fn resolve_env_vars(s: &str) -> String {
+    let mut result = s.to_string();
+    if let Some(rr) = find_repo_root() {
+        result = result.replace("$REPO_ROOT", &rr.to_string_lossy());
+    }
+
+    while let Some(captures) = ENV_VAR_REFERENCE.captures(&result) {
+        // unwrap here is safe since the capture group is mandatory
+        let first_variable_name = captures.get(1).unwrap().as_str();
+        if let Ok(val) = env::var(first_variable_name) {
+            result = result.replace(first_variable_name, &val);
+        } else {
+            eprintln!("Unrecognized environment variable: {}", first_variable_name);
+            process::exit(-1);
+        }
+    }
+    result
+}
 
 /// Parses `args` and loads them into the pending command.
 fn load_env_args(cmd: &mut Command, args: &Option<String>) {
     if let Some(args) = args {
         for assignment in args.split(';') {
             if let Some((name, val)) = assignment.split_once('=') {
+                let val = resolve_env_vars(val);
                 cmd.env(name, val);
             }
         }
@@ -101,11 +124,6 @@ fn main() {
     let mut violation_count = 0;
     for (cargo_toml, files) in files_by_crate.iter() {
         violation_count += lint_crate(cargo_toml, files, &clippy_env_args);
-    }
-
-    // TODO (mrd): deleteme
-    for (key, value) in env::vars() {
-        eprintln!("{}: {}", key, value);
     }
     process::exit(violation_count);
 }

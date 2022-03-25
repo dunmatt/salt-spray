@@ -9,6 +9,7 @@
 #![deny(missing_docs)]
 #![forbid(unsafe_code)]
 
+use std::env;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
@@ -24,4 +25,19 @@ pub fn find_manifest<S: AsRef<OsStr> + ?Sized>(filename: &S) -> Option<PathBuf> 
         }
     }
     None
+}
+
+/// Starting from $PWD, search up until a .git directory is found, and return
+/// that as the repo root.
+pub fn find_repo_root() -> Option<PathBuf> {
+    env::current_dir().or_else(|_| {
+        env::var("PWD").map(PathBuf::from)
+    }).ok().and_then(|p| {
+        for parent in p.ancestors() {
+            if parent.join(".git").exists() {
+                return Some(parent.to_path_buf());
+            }
+        }
+        None
+    })
 }
