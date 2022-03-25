@@ -33,7 +33,7 @@ fn resolve_env_vars(s: &str) -> String {
     while let Some(captures) = ENV_VAR_REFERENCE.captures(&result) {
         // unwrap here is safe since the capture group is mandatory
         let first_variable_name = captures.get(1).unwrap().as_str();
-        if let Ok(val) = env::var(first_variable_name) {
+        if let Ok(val) = env::var(&first_variable_name[1..]) {
             result = result.replace(first_variable_name, &val);
         } else {
             eprintln!("Unrecognized environment variable: {}", first_variable_name);
@@ -57,18 +57,7 @@ fn load_env_args(cmd: &mut Command, args: &Option<String>) {
 
 /// Runs Clippy on a crate, but only outputs lints for files in the given set.
 fn lint_crate(cargo_toml: &str, files: &BTreeSet<String>, args: &Option<String>) -> i32 {
-
-
-
-
-    // TODO: remove extra eprintlns and set a sane default for result...
-    //       or don't... might be easier to give up on clippy support
-
-
-
-
-    let mut result = 5;
-    // let mut result = 0;
+    let mut result = 0;
     let mut cmd = Command::new("cargo");
     load_env_args(&mut cmd, args);
     cmd.args(["clippy", "--no-deps", "--quiet", "--manifest-path", cargo_toml]);
@@ -83,11 +72,11 @@ fn lint_crate(cargo_toml: &str, files: &BTreeSet<String>, args: &Option<String>)
                     if files.iter().any(|s| s.ends_with(project_relative_filename)) {
                         eprintln!("\n{}", found_lint);
                         result += 1;
-                    } else {
-                        eprintln!("None of the files ended with {}", project_relative_filename);
+                    // } else {
+                    //     eprintln!("None of the files ended with {}", project_relative_filename);
                     }
-                } else {
-                    eprintln!("Bad\n{}", found_lint);
+                // } else {
+                //     eprintln!("Bad\n{}", found_lint);
                 }
             }
         }
