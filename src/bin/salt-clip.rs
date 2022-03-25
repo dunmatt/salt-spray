@@ -38,7 +38,8 @@ fn lint_crate(cargo_toml: &str, files: &BTreeSet<String>, args: &Option<String>)
 
 
 
-    // TODO: remove extra eprintlns and set a sane default for result
+    // TODO: remove extra eprintlns and set a sane default for result...
+    //       or don't... might be easier to give up on clippy support
 
 
 
@@ -63,7 +64,7 @@ fn lint_crate(cargo_toml: &str, files: &BTreeSet<String>, args: &Option<String>)
                         eprintln!("None of the files ended with {}", project_relative_filename);
                     }
                 } else {
-                    eprintln!("Bad\n{:?}", found_lint);
+                    eprintln!("Bad\n{}", found_lint);
                 }
             }
         }
@@ -100,6 +101,11 @@ fn main() {
     let mut violation_count = 0;
     for (cargo_toml, files) in files_by_crate.iter() {
         violation_count += lint_crate(cargo_toml, files, &clippy_env_args);
+    }
+
+    // TODO (mrd): deleteme
+    for (key, value) in env::vars() {
+        eprintln!("{}: {}", key, value);
     }
     process::exit(violation_count);
 }
